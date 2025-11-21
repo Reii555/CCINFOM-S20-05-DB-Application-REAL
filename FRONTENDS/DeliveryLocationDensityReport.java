@@ -2,8 +2,10 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -34,7 +36,9 @@ public class DeliveryLocationDensityReport extends JFrame {
         header.setOpaque(true);
         header.setBackground(Color.WHITE);
         header.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 2));
-        main.add(header, BorderLayout.NORTH);
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setOpaque(false);
+        topPanel.add(header, BorderLayout.NORTH);
         
         JPanel controls = new JPanel(new FlowLayout());
         controls.setBackground(Color.LIGHT_GRAY);
@@ -58,50 +62,70 @@ public class DeliveryLocationDensityReport extends JFrame {
         generateBtn.addActionListener(e -> generateReport());
         controls.add(generateBtn);
         
-        main.add(controls, BorderLayout.NORTH);
+        topPanel.add(controls, BorderLayout.CENTER);
+        main.add(topPanel, BorderLayout.NORTH);
         
         String[] columns = {"Location", "Completed Deliveries", "Month", "Year", "Rank"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         reportTable = new JTable(model);
         reportTable.setBackground(Color.WHITE);
         reportTable.setGridColor(Color.BLACK);
-        main.add(new JScrollPane(reportTable), BorderLayout.CENTER);
+        reportTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        reportTable.setRowHeight(24);
+        reportTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        reportTable.getTableHeader().setBackground(Color.LIGHT_GRAY);
+
+        JScrollPane scrollPane = new JScrollPane(reportTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        main.add(scrollPane, BorderLayout.CENTER);
         
         add(main);
         setVisible(true);
     }
     
-    /**
-     * Placeholder implementation.
-     *
-     * This method currently just informs the user that the backend logic
-     * is not implemented yet so the project still compiles and the button
-     * is clickable.
-     *
-     * TODO for backend team:
-     *  1. Implement DeliveryManager.generateLocationDensityReport(int year, int month)
-     *     using the SQL in sql/Delivery_Location_Density_Report.sql.
-     *  2. Replace this placeholder body with code that:
-     *       - calls that DeliveryManager method to get a ResultSet,
-     *       - clears the table model,
-     *       - iterates the ResultSet and adds rows matching the columns:
-     *           "Delivery Location", "Total Completed Deliveries", "Month", "Year", "Location_Rank".
-     */
     private void generateReport() {
         int month = (int) monthCombo.getSelectedItem();
         int year = (int) yearCombo.getSelectedItem();
 
+        try {
+            List<DeliveryLocationDensityReportModel> reports = DeliveryManager.getDeliveryLocationDensityReportModel(year, month);
+
+            DefaultTableModel model = (DefaultTableModel) reportTable.getModel();
+            model.setRowCount(0);
+
+            if (reports == null || reports.isEmpty()) {
         JOptionPane.showMessageDialog(
             this,
-            "Delivery Location Density Report UI is wired, but the backend query\n" +
-            "(DeliveryManager.generateLocationDensityReport(year, month)) is not yet implemented.\n\n" +
-            "TODO for backend team:\n" +
-            " 1) Implement the method in DeliveryManager using sql/Delivery_Location_Density_Report.sql.\n" +
-            " 2) Update DeliveryLocationDensityReport.generateReport() to call that method\n" +
-            "    and populate the JTable with the returned data.",
-            "Not Implemented Yet",
+                    "No delivery location data found for the selected month and year.",
+                    "No Data",
             JOptionPane.INFORMATION_MESSAGE
         );
+                return;
+            }
+
+            for (DeliveryLocationDensityReportModel report : reports) {
+                model.addRow(new Object[]{
+                    report.getLocation(),
+                    report.getTotalCompleteDeliveries(),
+                    report.getMonth(),
+                    report.getYear(),
+                    report.getRank()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Error generating report: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+            );
+            e.printStackTrace();
+        }
     }
 }
 
