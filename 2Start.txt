@@ -1,0 +1,8 @@
+step 1: after downloading the zip ng REALEST FILE, extract it
+step 2: open the extracted REALEST FILE
+step 3: press the directory bar(?) basta yung to da left ng search bar (na nasa bandang top right)
+        then enter "cmd" to open command prompt dun na mismo sa directory ni REALEST FILE
+step 4: compile it by pasting..
+        "javac -cp ".;mysql-connector-j-8.1.0.jar" backend/*.java frontend/*.java"
+step 5: if no errors run it with..
+        "java -cp ".;mysql-connector-j-8.1.0.jar;backend;frontend" DriverGui"
