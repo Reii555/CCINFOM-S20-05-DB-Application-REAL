@@ -2,6 +2,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.time.Month;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -88,12 +89,19 @@ public class DeliveryLocationDensityReport extends JFrame {
         setVisible(true);
     }
     
+String selectedMonthName = "January"; // from dropdown
+int monthNumber = Month.valueOf(selectedMonthName.toUpperCase()).getValue(); // Java 8+
+int selectedYear = 2024;
+
+List<DeliveryLocationDensityReportModel> report = DeliveryManager.getDeliveryLocationDensityReportModel(monthNumber, selectedYear);
+
+
     private void generateReport() {
         int month = (int) monthCombo.getSelectedItem();
         int year = (int) yearCombo.getSelectedItem();
 
         try {
-            List<DeliveryLocationDensityReportModel> reports = DeliveryManager.getDeliveryLocationDensityReportModel(year, month);
+            List<DeliveryLocationDensityReportModel> reports = DeliveryManager.getDeliveryLocationDensityReportModel(month, year);
 
             DefaultTableModel model = (DefaultTableModel) reportTable.getModel();
             model.setRowCount(0);
