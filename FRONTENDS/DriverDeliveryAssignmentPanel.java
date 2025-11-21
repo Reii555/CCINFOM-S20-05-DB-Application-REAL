@@ -49,8 +49,6 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
         main.add(body, BorderLayout.CENTER);
         add(main);
         setVisible(true);
-
-        loadSampleData();
     }
 
     private JPanel createTopPanel() {
@@ -99,7 +97,6 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
 
         // Refresh Button
         JButton refreshButton = createButton("Refresh", Color.white, new Dimension(100, 30));
-        refreshButton.addActionListener(e -> loadSampleData());
         panel.add(refreshButton);
 
         return panel;
@@ -133,7 +130,7 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
         tableLabel.setBorder(BorderFactory.createLineBorder(Color.black, 2));
         panel.add(tableLabel, BorderLayout.NORTH);
 
-        // Table - ACCESS: DRM
+        // Table
         String[] columns = {"Delivery ID", "Order ID", "Delivery Type", "Status", "Driver ID", "Est. Time"};
         deliveryTableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -179,7 +176,7 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
         tableLabel.setBorder(BorderFactory.createLineBorder(Color.black, 2));
         panel.add(tableLabel, BorderLayout.NORTH);
 
-        // Table - ACCESS: RVM
+        // Table
         String[] columns = {"Driver ID", "Driver Name", "Licence", "Status", "Shift"};
         driverTableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -268,40 +265,9 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
         return button;
     }
 
-    private void loadSampleData() {
-        // Load Delivery Orders
-        deliveryTableModel.setRowCount(0);
-        Object[][] deliveryData = {
-                {2000000001L, 1000000001L, "Express", "Pending", null, "12:00 PM"},
-                {2000000002L, 1000000002L, "Standard", "Assigned", 3000000001L, "1:30 PM"},
-                {2000000003L, 1000000003L, "Express", "In Transit", 3000000002L, "11:45 AM"},
-                {2000000004L, 1000000004L, "Standard", "Pending", null, "2:00 PM"},
-                {2000000005L, 1000000005L, "Express", "Assigned", 3000000003L, "12:30 PM"}
-        };
-
-        for (Object[] row : deliveryData) {
-            deliveryTableModel.addRow(row);
-        }
-
-        // Load Available Drivers - ACCESS: RVM
-        driverTableModel.setRowCount(0);
-        Object[][] driverData = {
-                {3000000001L, "Ramon Cruz", "ABC-123-XYZ", "Available", "Morning"},
-                {3000000002L, "Linda Santos", "DEF-456-UVW", "On Delivery", "Morning"},
-                {3000000003L, "Carlos Reyes", "GHI-789-RST", "Available", "Afternoon"},
-                {3000000004L, "Teresa Garcia", "JKL-012-PQR", "Available", "Afternoon"},
-                {3000000005L, "Miguel Bautista", "MNO-345-LMN", "Off Duty", "Evening"}
-        };
-
-        for (Object[] row : driverData) {
-            driverTableModel.addRow(row);
-        }
-    }
-
     private void updateDeliveryInfo() {
         int selectedRow = deliveryTable.getSelectedRow();
         if (selectedRow >= 0) {
-            // ACCESS: DRM
             String deliveryId = deliveryTableModel.getValueAt(selectedRow, 0).toString();
             String orderId = deliveryTableModel.getValueAt(selectedRow, 1).toString();
             String deliveryType = deliveryTableModel.getValueAt(selectedRow, 2).toString();
@@ -309,8 +275,7 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
             Object driverId = deliveryTableModel.getValueAt(selectedRow, 4);
             String estTime = deliveryTableModel.getValueAt(selectedRow, 5).toString();
 
-            // Get customer address (simulated)
-            String customerAddress = getCustomerAddress(orderId);
+            String customerAddress = "";
 
             deliveryInfoLabel.setText(
                     "<html><b>Delivery ID:</b> " + deliveryId + "<br>" +
@@ -362,18 +327,15 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
             return;
         }
 
-        // ACCESS: DRM
         String deliveryId = deliveryTableModel.getValueAt(selectedDeliveryRow, 0).toString();
         String orderId = deliveryTableModel.getValueAt(selectedDeliveryRow, 1).toString();
         String deliveryType = deliveryTableModel.getValueAt(selectedDeliveryRow, 2).toString();
 
-        // ACCESS: RVM
         String driverId = driverTableModel.getValueAt(selectedDriverRow, 0).toString();
         String driverName = driverTableModel.getValueAt(selectedDriverRow, 1).toString();
         String driverLicence = driverTableModel.getValueAt(selectedDriverRow, 2).toString();
         String driverShift = driverTableModel.getValueAt(selectedDriverRow, 4).toString();
 
-        // Calculate estimated delivery time based on delivery type
         String estimatedTime = calculateEstimatedTime(deliveryType);
 
         int confirm = JOptionPane.showConfirmDialog(this,
@@ -391,13 +353,10 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // UPDATE: DRM(Driver ID, Status, Estimated Delivery Time)
-            // TODO: Execute SQL - UPDATE DRM SET Driver_ID = ?, Status = 'Assigned', Est_Delivery_Time = ? WHERE Delivery_ID = ?
             deliveryTableModel.setValueAt(driverId, selectedDeliveryRow, 4);
             deliveryTableModel.setValueAt("Assigned", selectedDeliveryRow, 3);
             deliveryTableModel.setValueAt(estimatedTime, selectedDeliveryRow, 5);
 
-            // Update driver status
             driverTableModel.setValueAt("On Delivery", selectedDriverRow, 3);
 
             JOptionPane.showMessageDialog(this,
@@ -420,7 +379,6 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
             return;
         }
 
-        // ACCESS: DRM(Delivery ID, Status)
         String deliveryId = deliveryTableModel.getValueAt(selectedRow, 0).toString();
         String orderId = deliveryTableModel.getValueAt(selectedRow, 1).toString();
         String deliveryStatus = deliveryTableModel.getValueAt(selectedRow, 3).toString();
@@ -442,8 +400,7 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
             return;
         }
 
-        // ACCESS: CRM
-        String customerAddress = getCustomerAddress(orderId);
+        String customerAddress = "";
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "<html><b>Dispatch Delivery to Driver</b><br><br>" +
@@ -457,8 +414,6 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // UPDATE: DRM(Status) - Set to 'In Transit'
-            // TODO: Execute SQL - UPDATE DRM SET Status = 'In Transit' WHERE Delivery_ID = ?
             deliveryTableModel.setValueAt("In Transit", selectedRow, 3);
 
             JOptionPane.showMessageDialog(this,
@@ -472,24 +427,10 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
     }
 
     private String calculateEstimatedTime(String deliveryType) {
-        // Simple calculation based on delivery type
         if (deliveryType.equals("Express")) {
             return "30 minutes";
         } else {
             return "60 minutes";
         }
     }
-
-    // Sample customer address - ACCESS: CRM
-    private String getCustomerAddress(String orderId) {
-        switch (orderId) {
-            case "1000000001": return "123 Rizal Street, Sta. Ana, Manila";
-            case "1000000002": return "456 Mabini Avenue, Malate, Manila";
-            case "1000000003": return "789 Roxas Boulevard, Pasay City";
-            case "1000000004": return "321 Sumulong Highway, Antipolo, Rizal";
-            case "1000000005": return "654 Governor's Drive, Gen. Trias, Cavite";
-            default: return "Address not found";
-        }
-    }
-
 }
