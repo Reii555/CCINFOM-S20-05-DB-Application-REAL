@@ -46,6 +46,8 @@ public class PickupPrepPanel extends JFrame {
         main.add(body, BorderLayout.CENTER);
         add(main);
         setVisible(true);
+
+        loadPickupFromDB();
     }
 
     private JPanel createTopPanel() {
@@ -211,58 +213,44 @@ public class PickupPrepPanel extends JFrame {
     }
 
     private void updateCustomerInfo() {
-        int selectedRow = pickupTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            long customerId = Long.parseLong(tableModel.getValueAt(selectedRow, 7).toString());
-            String orderId = tableModel.getValueAt(selectedRow, 0).toString();
-            String location = tableModel.getValueAt(selectedRow, 3).toString();
-
-            String customerName = "";
-            String customerAddress = "";
-
+    int selectedRow = pickupTable.getSelectedRow();
+    if (selectedRow >= 0) {
+        int customerId = Integer.parseInt(tableModel.getValueAt(selectedRow, 7).toString());
+        
+        // BACKEND CALL
+        Customer customer = PickupManager.getCustomerById(customerId);
+        
+        if (customer != null) {
             customerInfoLabel.setText(
-                    "<html><b>Customer ID:</b> " + customerId + "<br>" +
-                            "<b>Customer Name:</b> " + customerName + "<br>" +
-                            "<b>Address:</b> " + customerAddress + "<br>" +
-                            "<b>Order ID:</b> " + orderId + "<br>" +
-                            "<b>Pickup Location:</b> " + location + "</html>"
+                "<html><b>Customer ID:</b> " + customerId + "<br>" +
+                "<b>Customer Name:</b> " + customer.getFirstName() + " " + customer.getLastName() + "<br>" +
+                "<b>Address:</b> " + customer.getAddress() + "<br>" +
+                "<b>Order ID:</b> " + tableModel.getValueAt(selectedRow, 0) + "<br>" +
+                "<b>Pickup Location:</b> " + tableModel.getValueAt(selectedRow, 3) + "</html>"
             );
         }
     }
+}
 
     private void prepareOrder() {
-        int selectedRow = pickupTable.getSelectedRow();
-        if (selectedRow < 0) {
-            JOptionPane.showMessageDialog(this, "Please select a pickup order first", "No Selection", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String status = tableModel.getValueAt(selectedRow, 2).toString();
-        if (!status.equals("Pending")) {
-            JOptionPane.showMessageDialog(this, "Only 'Pending' orders can be prepared", "Invalid Status", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String orderId = tableModel.getValueAt(selectedRow, 0).toString();
-        String location = tableModel.getValueAt(selectedRow, 3).toString();
-        long customerId = Long.parseLong(tableModel.getValueAt(selectedRow, 7).toString());
-        String customerName = "";
-
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "<html><b>Prepare Order for Pickup</b><br><br>" +
-                        "Order ID: " + orderId + "<br>" +
-                        "Pickup Location: " + location + "<br>" +
-                        "Customer: " + customerName + "<br><br>" +
-                        "Update status to 'Ready'?</html>",
-                "Confirm Preparation",
-                JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            tableModel.setValueAt("Ready", selectedRow, 2);
-            JOptionPane.showMessageDialog(this, "Order prepared successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            updateCustomerInfo();
-        }
+    int selectedRow = pickupTable.getSelectedRow();
+    if (selectedRow < 0) {
+        JOptionPane.showMessageDialog(this, "Please select a pickup order first", "No Selection", JOptionPane.WARNING_MESSAGE);
+        return;
     }
+
+    int orderId = Integer.parseInt(tableModel.getValueAt(selectedRow, 0).toString());
+    
+    // BACKEND CALL
+    boolean success = PickupManager.updatePickupStatus(orderId, "Ready");
+    
+    if (success) {
+        tableModel.setValueAt("Ready", selectedRow, 2);
+        JOptionPane.showMessageDialog(this, "Order prepared successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+    } else {
+        JOptionPane.showMessageDialog(this, "Failed to update order status", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
 
     private void verifyCustomer() {
         int selectedRow = pickupTable.getSelectedRow();
@@ -296,4 +284,26 @@ public class PickupPrepPanel extends JFrame {
             updateCustomerInfo();
         }
     }
+
+private void loadPickupFromDB() {
+    tableModel.setRowCount(0); // Clear existing empty data
+
+    // BACKEND CALL
+    java.util.List<Pickup> pickups = PickupManager.getPickupOrders(null, null, null);
+
+    for (Pickup pickup : pickups) {
+        Object[] row = {
+            pickup.getOrderId(),
+            pickup.getOrderType(),
+            pickup.getStatus(),
+            pickup.getPickupLocation(),
+            pickup.getPickupDate(),
+            pickup.getPickupService(),
+            pickup.getPaymentMethod(),
+            pickup.getCustomerId()
+        };
+        tableModel.addRow(row);
+    }
+}
+
 }
