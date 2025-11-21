@@ -31,7 +31,7 @@ public class DeliveryManager {
 
 public static List<Delivery> getAllDeliveriesByStatus(String status){
         List<Delivery> deliveries = new ArrayList<>();
-        String sql = "SELECT * FROM Deliveries WHERE DELIVERY STATUS = ?";
+        String sql = "SELECT * FROM Deliveries WHERE DELIVERY_STATUS = ?";
         
         try(Connection conn = DatabaseConnection.getConnection();
             PreparedStatement pStatement = conn.prepareStatement(sql)){
@@ -168,5 +168,8 @@ public static List<Delivery> getAllDeliveriesByStatus(String status){
     return reportList;
 }
 
+public static List<Delivery> getInTransitDeliveries() {
+    return getAllDeliveriesByStatus("In Transit");
+}
 
 }
