@@ -166,11 +166,8 @@ private JPanel createReports(Color color, Color button, Dimension dim){
     GBC.gridy = 0;
     buttonHolder.add(coButton, GBC);
 
-    // NOTE: Delivery Location Density Report is currently a UI-only stub.
-    // The button is enabled so the team can see the flow, but the actual
-    // database query still needs to be implemented in DeliveryManager.
     JButton dldButton = createMenuB("Delivery Location Density Report", Color.white, dim);
-    dldButton.addActionListener(e -> new DeliveryLocationDensityReportModel());
+    dldButton.addActionListener(e -> new DeliveryLocationDensityReport());
     GBC.gridy = 1;
     buttonHolder.add(dldButton, GBC);
 
