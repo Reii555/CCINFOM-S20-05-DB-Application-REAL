@@ -46,8 +46,6 @@ public class PickupManagementPanel extends JFrame {
         main.add(body, BorderLayout.CENTER);
         add(main);
         setVisible(true);
-
-        loadSampleData();
     }
 
     private JPanel createTopPanel() {
@@ -98,7 +96,6 @@ public class PickupManagementPanel extends JFrame {
 
         // Refresh Button
         JButton refreshButton = createButton("Refresh", Color.white, new Dimension(100, 30));
-        refreshButton.addActionListener(e -> loadSampleData());
         panel.add(refreshButton);
 
         return panel;
@@ -213,22 +210,6 @@ public class PickupManagementPanel extends JFrame {
         return button;
     }
 
-    private void loadSampleData() {
-        tableModel.setRowCount(0);
-
-        // Sample data - Only Completed, Picked Up, and Failed orders
-        Object[][] data = {
-                {1000000003, "Combo meal D", "Completed", "Pasay branch", "2024-01-19", "Express", "Cash", 1000000003},
-                {1000000006, "Meal C", "Completed", "Malate branch", "2024-01-22", "Standard", "Credit", 1000000002},
-                {1000000007, "Combo meal A", "Picked Up", "Sta. Ana branch", "2024-01-21", "Express", "Debit", 1000000001},
-                {1000000008, "Meal B", "Failed", "Antipolo branch", "2024-01-20", "Standard", "Cash", 1000000004}
-        };
-
-        for (Object[] row : data) {
-            tableModel.addRow(row);
-        }
-    }
-
     private void updateCustomerInfo() {
         int selectedRow = pickupTable.getSelectedRow();
         if (selectedRow >= 0) {
@@ -238,8 +219,8 @@ public class PickupManagementPanel extends JFrame {
             String status = tableModel.getValueAt(selectedRow, 2).toString();
             String paymentMethod = tableModel.getValueAt(selectedRow, 6).toString();
 
-            String customerName = getCustomerName(customerId);
-            String customerAddress = getCustomerAddress(customerId);
+            String customerName = "";
+            String customerAddress = "";
 
             customerInfoLabel.setText(
                     "<html><b>Customer ID:</b> " + customerId + "<br>" +
@@ -269,11 +250,10 @@ public class PickupManagementPanel extends JFrame {
             return;
         }
 
-        // ACCESS: PRM(Order ID, Pickup Status, Payment Method)
         String orderId = tableModel.getValueAt(selectedRow, 0).toString();
         String paymentMethod = tableModel.getValueAt(selectedRow, 6).toString();
         long customerId = Long.parseLong(tableModel.getValueAt(selectedRow, 7).toString());
-        String customerName = getCustomerName(customerId);
+        String customerName = "";
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "<html><b>Process Successful Pickup</b><br><br>" +
@@ -286,8 +266,6 @@ public class PickupManagementPanel extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // TODO: UPDATE: PRM(Pickup Status, Payment Method)
-            // UPDATE Pickups SET STATUS = 'Picked Up', PAYMENT_METHOD = ? WHERE ORDER_ID = ?
             tableModel.setValueAt("Picked Up", selectedRow, 2);
             JOptionPane.showMessageDialog(this,
                     "Pickup processed successfully!\n" +
@@ -314,10 +292,9 @@ public class PickupManagementPanel extends JFrame {
             return;
         }
 
-        // ACCESS: PRM(Order ID, Pickup Status, Payment Method)
         String orderId = tableModel.getValueAt(selectedRow, 0).toString();
         long customerId = Long.parseLong(tableModel.getValueAt(selectedRow, 7).toString());
-        String customerName = getCustomerName(customerId);
+        String customerName = "";
 
         // Ask for reason
         String[] reasons = {
@@ -349,8 +326,6 @@ public class PickupManagementPanel extends JFrame {
                     JOptionPane.WARNING_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
-                // TODO: UPDATE: PRM(Pickup Status, Payment Method)
-                // UPDATE Pickups SET STATUS = 'Failed', NOTES = ? WHERE ORDER_ID = ?
                 tableModel.setValueAt("Failed", selectedRow, 2);
                 JOptionPane.showMessageDialog(this,
                         "Pickup marked as 'Failed'\n" +
@@ -359,29 +334,6 @@ public class PickupManagementPanel extends JFrame {
                         "Failed Pickup Processed", JOptionPane.WARNING_MESSAGE);
                 updateCustomerInfo();
             }
-        }
-    }
-
-    // Sample customer data - TODO: Replace with database queries
-    private String getCustomerName(long customerId) {
-        switch ((int)customerId) {
-            case 1000000001: return "Juan Dela Cruz";
-            case 1000000002: return "Maria Santos";
-            case 1000000003: return "Pedro Reyes";
-            case 1000000004: return "Ana Garcia";
-            case 1000000005: return "Jose Bautista";
-            default: return "Unknown Customer";
-        }
-    }
-
-    private String getCustomerAddress(long customerId) {
-        switch ((int)customerId) {
-            case 1000000001: return "123 Rizal Street, Sta. Ana, Manila";
-            case 1000000002: return "456 Mabini Avenue, Malate, Manila";
-            case 1000000003: return "789 Roxas Boulevard, Pasay City";
-            case 1000000004: return "321 Sumulong Highway, Antipolo, Rizal";
-            case 1000000005: return "654 Governor's Drive, Gen. Trias, Cavite";
-            default: return "Address not found";
         }
     }
 }
