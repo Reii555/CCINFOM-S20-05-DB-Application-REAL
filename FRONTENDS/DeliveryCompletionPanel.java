@@ -76,9 +76,6 @@ public class DeliveryCompletionPanel extends JFrame {
 
         add(main);
         setVisible(true);
-
-        // Load sample data
-        loadSampleDeliveries();
     }
 
     private JPanel createTablePanel() {
@@ -281,14 +278,6 @@ public class DeliveryCompletionPanel extends JFrame {
         return button;
     }
 
-    private void loadSampleDeliveries() {
-        tableModel.addRow(new Object[]{"DEL-001", "John Smith", "123 Main St", "Driver A", "In Transit", "$45.50"});
-        tableModel.addRow(new Object[]{"DEL-002", "Mary Johnson", "456 Oak Ave", "Driver B", "In Transit", "$32.75"});
-        tableModel.addRow(new Object[]{"DEL-003", "Robert Brown", "789 Pine Rd", "Driver A", "In Transit", "$58.20"});
-        tableModel.addRow(new Object[]{"DEL-004", "Lisa Davis", "321 Elm St", "Driver C", "In Transit", "$41.00"});
-        tableModel.addRow(new Object[]{"DEL-005", "James Wilson", "654 Maple Dr", "Driver B", "In Transit", "$67.90"});
-    }
-
     private void loadDeliveryDetails() {
         int selectedRow = deliveryTable.getSelectedRow();
         if (selectedRow != -1) {
@@ -400,5 +389,4 @@ public class DeliveryCompletionPanel extends JFrame {
         notesArea.setText("");
         deliveryTable.clearSelection();
     }
-
 }
