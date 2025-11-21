@@ -126,35 +126,39 @@ public static List<Delivery> getAllDeliveriesByStatus(String status){
     }      return deliveries;
     }
 
-    public static List<DeliveryLocationDensityReportModel> getDeliveryLocationDensityReportModel() {
+    public static List<DeliveryLocationDensityReportModel> getDeliveryLocationDensityReportModel(int year, int month) {
     List<DeliveryLocationDensityReportModel> reportList = new ArrayList<>();
 
     String sql = "SELECT p.PICKUP_LOCATION AS Delivery_Location, " +
                  "COUNT(d.DELIVERY_ID) AS Total_Completed_Deliveries, " +
-                 "MONTHNAME(d.DELIVERY_DATE) AS Month, " +
-                 "YEAR(d.DELIVERY_DATE) AS Year, " +
+                 "MONTHNAME(MIN(d.DELIVERY_DATE)) AS Month, " +
+                 "YEAR(MIN(d.DELIVERY_DATE)) AS Year, " +
                  "RANK() OVER (ORDER BY COUNT(d.DELIVERY_ID) DESC) AS Location_Rank " +
                  "FROM Deliveries d " +
                  "JOIN Pickups p ON d.ORDER_ID = p.ORDER_ID " +
                  "WHERE d.DELIVERY_STATUS = 'Delivered' " +
-                 "AND YEAR(d.DELIVERY_DATE) = YEAR(CURDATE()) " +
-                 "AND MONTH(d.DELIVERY_DATE) = MONTH(CURDATE()) " +
-                 "GROUP BY p.PICKUP_LOCATION " +
+                 "AND YEAR(d.DELIVERY_DATE) = ? " +
+                 "AND MONTH(d.DELIVERY_DATE) = ? " +
+                 "GROUP BY p.PICKUP_LOCATION, YEAR(d.DELIVERY_DATE), MONTH(d.DELIVERY_DATE) " +
                  "ORDER BY COUNT(d.DELIVERY_ID) DESC";
 
     try (Connection conn = DatabaseConnection.getConnection();
-         PreparedStatement pStatement = conn.prepareStatement(sql);
-         ResultSet resultSet = pStatement.executeQuery()) {
+         PreparedStatement pStatement = conn.prepareStatement(sql)) {
 
-        while (resultSet.next()) {
-            DeliveryLocationDensityReportModel report = new DeliveryLocationDensityReportModel(
-                resultSet.getString("Delivery_Location"),
-                resultSet.getInt("Total_Completed_Deliveries"),
-                resultSet.getString("Month"),
-                resultSet.getInt("Year"),
-                resultSet.getInt("Location_Rank")
-            );
-            reportList.add(report);
+        pStatement.setInt(1, year);
+        pStatement.setInt(2, month);
+
+        try (ResultSet resultSet = pStatement.executeQuery()) {
+            while (resultSet.next()) {
+                DeliveryLocationDensityReportModel report = new DeliveryLocationDensityReportModel(
+                    resultSet.getString("Delivery_Location"),
+                    resultSet.getInt("Total_Completed_Deliveries"),
+                    resultSet.getString("Month"),
+                    resultSet.getInt("Year"),
+                    resultSet.getInt("Location_Rank")
+                );
+                reportList.add(report);
+            }
         }
 
     } catch (SQLException e) {
