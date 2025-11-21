@@ -105,4 +105,80 @@ public class PickupManager {
         return drivers;
     }
 
+    public static List<Pickup> getPickupOrders(String status, String location, String orderId){
+        List<Pickup> pickups = new ArrayList<>();
+        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM Pickups WHERE 1=1");
+
+        if(status != null && !status.isEmpty()){
+            sqlBuilder.append(" AND STATUS = ?");
+        }
+        if(location != null && !location.isEmpty()){
+            sqlBuilder.append(" AND PICKUP_LOCATION = ?");
+        }
+        if(orderId != null && !orderId.isEmpty()){
+            sqlBuilder.append(" AND ORDER_ID = ?");
+        }
+
+        try(Connection conn = DatabaseConnection.getConnection();
+        PreparedStatement pStatement = conn.prepareStatement(sqlBuilder.toString())){
+
+            int paramIndex = 1;
+            if(status != null && !status.isEmpty()){
+                pStatement.setString(paramIndex++, status);
+            }
+            if(location != null && !location.isEmpty()){
+                pStatement.setString(paramIndex++, location);
+            }
+            if(orderId != null && !orderId.isEmpty()){
+                pStatement.setInt(paramIndex++, Integer.parseInt(orderId));
+            }
+
+            ResultSet resultSet = pStatement.executeQuery();
+
+            while(resultSet.next()){
+                Pickup pickup = new Pickup(
+                resultSet.getInt("ORDER_ID"),
+                resultSet.getString("ORDER_TYPE"),
+                resultSet.getString("STATUS"),
+                resultSet.getString("PICKUP_LOCATION"),
+                resultSet.getDate("PICKUP_DATE"),
+                resultSet.getString("PICKUP_SERVICE"),
+                resultSet.getString("PAYMENT_METHOD"),
+                resultSet.getInt("CUSTOMER_ID")
+                );
+                pickups.add(pickup);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return pickups;
+    }
+
+    public static Customer getCustomerById(int customerId){
+        String sql = "SELECT c.* FROM Customers c JOIN Pickups p ON c.CUSTOMER_ID = p.CUSTOMER_ID WHERE p.ORDER_ID = ?";
+        try(Connection conn = DatabaseConnection.getConnection();
+        PreparedStatement pStatement = conn.prepareStatement(sql)){
+            pStatement.setInt(1, customerId);
+            ResultSet resultSet = pStatement.executeQuery();
+
+            if(resultSet.next()){
+                Customer customer = new Customer(
+                resultSet.getInt("CUSTOMER_ID"),
+                resultSet.getString("LASTNAME"),
+                resultSet.getString("FIRSTNAME"),
+                resultSet.getString("ADDRESS")
+                );
+                return customer;
+            } else {
+                return null; // No customer found with the given customerId
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            //System.out.println(e.getMessage());
+            return null;
+        }    
+    }
+
 }
