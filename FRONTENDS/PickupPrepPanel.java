@@ -46,8 +46,6 @@ public class PickupPrepPanel extends JFrame {
         main.add(body, BorderLayout.CENTER);
         add(main);
         setVisible(true);
-
-        loadSampleData();
     }
 
     private JPanel createTopPanel() {
@@ -98,7 +96,6 @@ public class PickupPrepPanel extends JFrame {
 
         // Refresh Button
         JButton refreshButton = createButton("Refresh", Color.white, new Dimension(100, 30));
-        refreshButton.addActionListener(e -> loadSampleData());
         panel.add(refreshButton);
 
         return panel;
@@ -213,23 +210,6 @@ public class PickupPrepPanel extends JFrame {
         return button;
     }
 
-    private void loadSampleData() {
-        tableModel.setRowCount(0);
-
-        // Sample data matching your database
-        Object[][] data = {
-                {1000000001, "Meal A", "Pending", "Sta. Ana branch", "2024-01-20", "Express", "Cash", 1000000001},
-                {1000000002, "Combo meal C", "Ready", "Malate branch", "2024-01-21", "Standard", "Credit", 1000000002},
-                {1000000003, "Combo meal D", "Completed", "Pasay branch", "2024-01-19", "Express", "Cash", 1000000003},
-                {1000000004, "Meal B", "Pending", "Antipolo branch", "2024-01-22", "Standard", "Debit", 1000000004},
-                {1000000005, "Meal A", "Ready", "Gen. Trias branch", "2024-01-21", "Express", "Credit", 1000000005}
-        };
-
-        for (Object[] row : data) {
-            tableModel.addRow(row);
-        }
-    }
-
     private void updateCustomerInfo() {
         int selectedRow = pickupTable.getSelectedRow();
         if (selectedRow >= 0) {
@@ -237,10 +217,8 @@ public class PickupPrepPanel extends JFrame {
             String orderId = tableModel.getValueAt(selectedRow, 0).toString();
             String location = tableModel.getValueAt(selectedRow, 3).toString();
 
-            // TODO: Fetch customer details from database using customerId
-            // For now, using sample data
-            String customerName = getCustomerName(customerId);
-            String customerAddress = getCustomerAddress(customerId);
+            String customerName = "";
+            String customerAddress = "";
 
             customerInfoLabel.setText(
                     "<html><b>Customer ID:</b> " + customerId + "<br>" +
@@ -268,7 +246,7 @@ public class PickupPrepPanel extends JFrame {
         String orderId = tableModel.getValueAt(selectedRow, 0).toString();
         String location = tableModel.getValueAt(selectedRow, 3).toString();
         long customerId = Long.parseLong(tableModel.getValueAt(selectedRow, 7).toString());
-        String customerName = getCustomerName(customerId);
+        String customerName = "";
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "<html><b>Prepare Order for Pickup</b><br><br>" +
@@ -280,7 +258,6 @@ public class PickupPrepPanel extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // TODO: Update database - UPDATE Pickups SET STATUS = 'Ready' WHERE ORDER_ID = orderId
             tableModel.setValueAt("Ready", selectedRow, 2);
             JOptionPane.showMessageDialog(this, "Order prepared successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             updateCustomerInfo();
@@ -302,7 +279,7 @@ public class PickupPrepPanel extends JFrame {
 
         String orderId = tableModel.getValueAt(selectedRow, 0).toString();
         long customerId = Long.parseLong(tableModel.getValueAt(selectedRow, 7).toString());
-        String customerName = getCustomerName(customerId);
+        String customerName = "";
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "<html><b>Verify Customer on Pickup</b><br><br>" +
@@ -314,34 +291,9 @@ public class PickupPrepPanel extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // TODO: Update database - UPDATE Pickups SET STATUS = 'Completed' WHERE ORDER_ID = orderId
             tableModel.setValueAt("Completed", selectedRow, 2);
             JOptionPane.showMessageDialog(this, "Pickup verified and completed!", "Success", JOptionPane.INFORMATION_MESSAGE);
             updateCustomerInfo();
         }
     }
-
-    // Sample customer data - TODO: Replace with database queries
-    private String getCustomerName(long customerId) {
-        switch ((int)customerId) {
-            case 1000000001: return "Juan Dela Cruz";
-            case 1000000002: return "Maria Santos";
-            case 1000000003: return "Pedro Reyes";
-            case 1000000004: return "Ana Garcia";
-            case 1000000005: return "Jose Bautista";
-            default: return "Unknown Customer";
-        }
-    }
-
-    private String getCustomerAddress(long customerId) {
-        switch ((int)customerId) {
-            case 1000000001: return "123 Rizal Street, Sta. Ana, Manila";
-            case 1000000002: return "456 Mabini Avenue, Malate, Manila";
-            case 1000000003: return "789 Roxas Boulevard, Pasay City";
-            case 1000000004: return "321 Sumulong Highway, Antipolo, Rizal";
-            case 1000000005: return "654 Governor's Drive, Gen. Trias, Cavite";
-            default: return "Address not found";
-        }
-    }
-
 }
