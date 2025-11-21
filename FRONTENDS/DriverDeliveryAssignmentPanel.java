@@ -2,7 +2,11 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.border.EmptyBorder;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
+import java.util.List;
 
 public class DriverDeliveryAssignmentPanel extends JFrame {
     private JTable deliveryTable;
@@ -50,6 +54,8 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
         add(main);
         setVisible(true);
 
+        loadDeliveryOrdersFromDB();
+        loadAvailableDriversFromDB();
     }
 
     private JPanel createTopPanel() {
@@ -98,6 +104,7 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
 
         // Refresh Button
         JButton refreshButton = createButton("Refresh", Color.white, new Dimension(100, 30));
+        refreshButton.addActionListener(e -> loadSampleData());
         panel.add(refreshButton);
 
         return panel;
@@ -266,6 +273,35 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
         return button;
     }
 
+    private void loadSampleData() {
+        // Load Delivery Orders
+        deliveryTableModel.setRowCount(0);
+        Object[][] deliveryData = {
+                {2000000001L, 1000000001L, "Express", "Pending", null, "12:00 PM"},
+                {2000000002L, 1000000002L, "Standard", "Assigned", 3000000001L, "1:30 PM"},
+                {2000000003L, 1000000003L, "Express", "In Transit", 3000000002L, "11:45 AM"},
+                {2000000004L, 1000000004L, "Standard", "Pending", null, "2:00 PM"},
+                {2000000005L, 1000000005L, "Express", "Assigned", 3000000003L, "12:30 PM"}
+        };
+
+        for (Object[] row : deliveryData) {
+            deliveryTableModel.addRow(row);
+        }
+
+        // Load Available Drivers - ACCESS: RVM
+        driverTableModel.setRowCount(0);
+        Object[][] driverData = {
+                {3000000001L, "Ramon Cruz", "ABC-123-XYZ", "Available", "Morning"},
+                {3000000002L, "Linda Santos", "DEF-456-UVW", "On Delivery", "Morning"},
+                {3000000003L, "Carlos Reyes", "GHI-789-RST", "Available", "Afternoon"},
+                {3000000004L, "Teresa Garcia", "JKL-012-PQR", "Available", "Afternoon"},
+                {3000000005L, "Miguel Bautista", "MNO-345-LMN", "Off Duty", "Evening"}
+        };
+
+        for (Object[] row : driverData) {
+            driverTableModel.addRow(row);
+        }
+    }
 
     private void updateDeliveryInfo() {
         int selectedRow = deliveryTable.getSelectedRow();
@@ -278,10 +314,8 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
             Object driverId = deliveryTableModel.getValueAt(selectedRow, 4);
             String estTime = deliveryTableModel.getValueAt(selectedRow, 5).toString();
 
-            // Get customer address
-            String customerAddress = "";
-            // TODO: Get from database
-            // SELECT Address FROM CRM WHERE Order_ID = orderId
+            // Get customer address (simulated)
+            String customerAddress = getCustomerAddress(orderId);
 
             deliveryInfoLabel.setText(
                     "<html><b>Delivery ID:</b> " + deliveryId + "<br>" +
@@ -414,7 +448,7 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
         }
 
         // ACCESS: CRM
-        String customerAddress = "";
+        String customerAddress = getCustomerAddress(orderId);
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "<html><b>Dispatch Delivery to Driver</b><br><br>" +
@@ -450,4 +484,58 @@ public class DriverDeliveryAssignmentPanel extends JFrame {
             return "60 minutes";
         }
     }
+
+    // Sample customer address - ACCESS: CRM
+    private String getCustomerAddress(String orderId) {
+        switch (orderId) {
+            case "1000000001": return "123 Rizal Street, Sta. Ana, Manila";
+            case "1000000002": return "456 Mabini Avenue, Malate, Manila";
+            case "1000000003": return "789 Roxas Boulevard, Pasay City";
+            case "1000000004": return "321 Sumulong Highway, Antipolo, Rizal";
+            case "1000000005": return "654 Governor's Drive, Gen. Trias, Cavite";
+            default: return "Address not found";
+        }
+    }
+
+private void loadDeliveryOrdersFromDB(){
+    deliveryTableModel.setRowCount(0);
+
+    // BACKEND CALL
+    List<Delivery> orders = DeliveryManager.getAllDeliveriesByStatus("Pending");
+
+     for (Delivery delivery : orders) {
+    Object[] row = {
+        delivery.getDeliveryId(),
+        delivery.getOrderId(),
+        delivery.getDeliveryType(),
+        delivery.getDeliveryStatus(),
+        delivery.getDriverId(),
+        delivery.getEstDeliveryTime() // or calculate estimated time
+    };
+    deliveryTableModel.addRow(row);
+        }
+    }
+
+    private void loadAvailableDriversFromDB() {
+    driverTableModel.setRowCount(0);
+    
+    // BACKEND CALL
+    ResultSet drivers = DriverManager.getAvailableDrivers();
+    
+    try {
+        while (drivers != null && drivers.next()) {
+            Object[] row = {
+                drivers.getInt("DRIVER_ID"),
+                drivers.getString("DRIVER_FIRSTNAME") + " " + drivers.getString("DRIVER_LASTNAME"),
+                drivers.getString("DRIVER_LICENCE"),
+                "Available",
+                drivers.getString("SHIFT")
+            };
+            driverTableModel.addRow(row);
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+}
+
 }
